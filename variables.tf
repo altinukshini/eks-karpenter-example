@@ -4,24 +4,6 @@ variable "region" {
   default     = "us-west-2"
 }
 
-variable "cluster_name" {
-  description = "Name of the EKS cluster"
-  type        = string
-  default     = "eks-karpenter-cluster"
-}
-
-variable "cluster_version" {
-  description = "Kubernetes version to use for the EKS cluster"
-  type        = string
-  default     = "1.29"
-}
-
-variable "karpenter_version" {
-  description = "Version of Karpenter to deploy"
-  type        = string
-  default     = "v1.3.1"
-}
-
 variable "vpc_id" {
   description = "ID of the VPC where the cluster will be deployed"
   type        = string
@@ -30,7 +12,6 @@ variable "vpc_id" {
 variable "private_subnet_ids" {
   description = "List of private subnet IDs for the EKS cluster nodes"
   type        = list(string)
-  default     = []
 }
 
 variable "public_subnet_ids" {
@@ -38,113 +19,122 @@ variable "public_subnet_ids" {
   type        = list(string)
 }
 
-variable "use_subnet_discovery" {
-  description = "Whether to use subnet discovery based on tags instead of explicit subnet IDs"
-  type        = bool
-  default     = true
-}
-
-variable "use_security_group_discovery" {
-  description = "Whether to use security group discovery based on tags instead of explicit security group IDs"
-  type        = bool
-  default     = true
-}
-
-variable "cluster_endpoint_public_access" {
-  description = "Whether to enable public access to the EKS cluster endpoint"
-  type        = bool
-  default     = true
-}
-
-variable "cluster_endpoint_public_access_cidrs" {
-  description = "List of CIDR blocks to allow public access to the EKS cluster endpoint"
-  type        = list(string)
-  default     = ["0.0.0.0/0"]
-}
-
 variable "default_tags" {
   description = "Default tags to apply to all resources"
   type        = map(string)
   default = {
     Environment = "demo"
-    Project     = "eks-karpenter"
+    Project     = "eks-karpenter-example"
     Terraform   = "true"
-    Owner       = "platform-team"
   }
 }
 
-variable "eks_managed_node_groups" {
-  description = "Map of EKS managed node group definitions to create"
-  type        = any
+variable "eks" {
+  description = "EKS cluster configuration"
+  type = object({
+    cluster_name                         = string
+    cluster_version                      = string
+    cluster_endpoint_public_access       = bool
+    cluster_endpoint_public_access_cidrs = list(string)
+    managed_node_groups                  = map(any)
+    managed_node_group_defaults          = any
+  })
   default = {
-    system = {
-      name           = "eks-system"
-      instance_types = ["t4g.small"]
-      ami_type       = "AL2_ARM_64" # ARM AMI type for Graviton instances
-      min_size       = 1
-      max_size       = 3
-      desired_size   = 2
-      capacity_type  = "ON_DEMAND"
-
-      lifecycle = {
-        create_before_destroy = true
+    cluster_name                         = "eks-karpenter-demo"
+    cluster_version                      = "1.30"
+    cluster_endpoint_public_access       = true
+    cluster_endpoint_public_access_cidrs = ["0.0.0.0/0"]
+    managed_node_groups = {
+      system = {
+        name           = "eks-system"
+        instance_types = ["t4g.small"]
+        ami_type       = "AL2_ARM_64"
+        min_size       = 1
+        max_size       = 3
+        desired_size   = 2
+        capacity_type  = "ON_DEMAND"
+        lifecycle = {
+          create_before_destroy = true
+        }
       }
+    }
+    managed_node_group_defaults = {
+      ami_type       = "AL2_ARM_64"
+      instance_types = ["t4g.small"]
+      disk_size      = 20
     }
   }
 }
 
-variable "eks_managed_node_group_defaults" {
-  description = "Map of EKS managed node group default configurations"
-  type        = any
+variable "karpenter" {
+  description = "Karpenter configuration"
+  type = object({
+    version                      = string
+    use_subnet_discovery         = bool
+    use_security_group_discovery = bool
+    node_pools                   = map(any)
+  })
   default = {
-    ami_type       = "AL2_ARM_64"
-    instance_types = ["t4g.small"]
-    disk_size      = 50
+    version                      = "v1.3.1"
+    use_subnet_discovery         = true
+    use_security_group_discovery = true
+    node_pools = {
+      x86 = {
+        name = "default-x86"
+        instance_types = [
+          "t3.small", "t3a.small",
+          "t3.medium", "t3a.medium",
+          # x86 instances
+          "m5.medium", "m5.large", "m5.xlarge",
+          "c5.medium", "c5.large", "c5.xlarge",
+          "r5.medium", "r5.large", "r5.xlarge",
+          # Latest x86 instances
+          "m6i.medium", "m6i.large", "m6i.xlarge",
+          "c6i.medium", "c6i.large", "c6i.xlarge",
+          "r6i.medium", "r6i.large", "r6i.xlarge"
+        ]
+        capacity_types            = ["spot", "on-demand"]
+        architecture              = "amd64"
+        os                        = "linux"
+        ttl_seconds_after_empty   = 30
+        ttl_seconds_until_expired = 2592000
+        labels = {
+          "kubernetes.io/arch"         = "amd64"
+          "node-type"                  = "x86"
+          "karpenter.sh/capacity-type" = "spot"
+          "nodeManager"                = "karpenter"
+        }
+      },
+      arm = {
+        name = "default-arm"
+        instance_types = [
+          "t4g.small", "t4g.medium",
+          # Graviton2 instances
+          "m6g.medium", "m6g.large", "m6g.xlarge",
+          "c6g.medium", "c6g.large", "c6g.xlarge",
+          "r6g.medium", "r6g.large", "r6g.xlarge",
+          # Graviton3 instances
+          "m7g.medium", "m7g.large", "m7g.xlarge",
+          "c7g.medium", "c7g.large", "c7g.xlarge",
+          "r7g.medium", "r7g.large", "r7g.xlarge",
+          # Graviton4 instances
+          "m8g.medium", "m8g.large", "m8g.xlarge",
+          "c8g.medium", "c8g.large", "c8g.xlarge",
+          "r8g.medium", "r8g.large", "r8g.xlarge",
+          "x8g.medium", "x8g.large", "x8g.xlarge"
+        ]
+        capacity_types            = ["spot", "on-demand"]
+        architecture              = "arm64"
+        os                        = "linux"
+        ttl_seconds_after_empty   = 30
+        ttl_seconds_until_expired = 2592000
+        labels = {
+          "kubernetes.io/arch"         = "arm64"     # Architecture label
+          "node-type"                  = "arm"       # Custom node type label
+          "karpenter.sh/capacity-type" = "spot"      # Capacity type label
+          "nodeManager"                = "karpenter" # Node manager label
+        }
+      }
+    }
   }
-}
-
-variable "karpenter_node_instance_types" {
-  description = "List of instance types that Karpenter can provision"
-  type        = list(string)
-  default = [
-    # x86 instances
-    "m5.large", "m5.xlarge", "m5.2xlarge",
-    "c5.large", "c5.xlarge", "c5.2xlarge",
-    "r5.large", "r5.xlarge", "r5.2xlarge",
-    # Latest x86 instances
-    "m6i.large", "m6i.xlarge", "m6i.2xlarge",
-    "c6i.large", "c6i.xlarge", "c6i.2xlarge",
-    "r6i.large", "r6i.xlarge", "r6i.2xlarge",
-    # ARM/Graviton instances
-    "m6g.large", "m6g.xlarge", "m6g.2xlarge",
-    "c6g.large", "c6g.xlarge", "c6g.2xlarge",
-    "r6g.large", "r6g.xlarge", "r6g.2xlarge",
-    # Latest ARM/Graviton instances
-    "m7g.large", "m7g.xlarge", "m7g.2xlarge",
-    "c7g.large", "c7g.xlarge", "c7g.2xlarge",
-    "r7g.large", "r7g.xlarge", "r7g.2xlarge",
-    # Graviton4 instances
-    "m8g.large", "m8g.xlarge", "m8g.2xlarge",
-    "c8g.large", "c8g.xlarge", "c8g.2xlarge",
-    "r8g.large", "r8g.xlarge", "r8g.2xlarge",
-    "x8g.large", "x8g.xlarge", "x8g.2xlarge"
-  ]
-}
-
-variable "karpenter_node_capacity_types" {
-  description = "List of capacity types that Karpenter can use (SPOT, ON_DEMAND)"
-  type        = list(string)
-  default     = ["SPOT", "ON_DEMAND"]
-}
-
-variable "karpenter_ttl_seconds_after_empty" {
-  description = "Number of seconds Karpenter should wait before terminating an empty node"
-  type        = number
-  default     = 30
-}
-
-variable "karpenter_ttl_seconds_until_expired" {
-  description = "Number of seconds a node can live before being replaced by Karpenter"
-  type        = number
-  default     = 2592000 # 30 days
 }

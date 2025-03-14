@@ -1,5 +1,5 @@
 locals {
-  cluster_name = var.cluster_name
+  cluster_name = var.eks.cluster_name
 
   tags = merge(
     var.default_tags,
@@ -14,9 +14,14 @@ locals {
   karpenter_sa_name   = "karpenter"
 
   eks_managed_node_group_defaults = merge(
-    var.eks_managed_node_group_defaults,
+    var.eks.managed_node_group_defaults,
     {
       tags = local.tags
     }
   )
+
+  available_azs   = data.aws_availability_zones.available.names
+  subnet_zones    = try(data.aws_subnet.private_subnets[*].availability_zone, [])
+  karpenter_zones = length(local.subnet_zones) > 0 ? local.subnet_zones : local.available_azs
 }
+

@@ -1,4 +1,3 @@
-
 module "eks_aws_auth" {
   source  = "terraform-aws-modules/eks/aws//modules/aws-auth"
   version = "~> 20.34.0"
@@ -37,4 +36,4 @@ module "eks_aws_auth" {
     module.eks,
     module.karpenter.karpenter_node_role
   ]
-} 
+}

@@ -56,7 +56,7 @@ output "private_subnet_ids" {
 
 output "subnet_discovery_enabled" {
   description = "Whether subnet discovery is enabled"
-  value       = var.use_subnet_discovery ? "Using subnet discovery with karpenter.sh/discovery tag" : "Using explicit subnet IDs"
+  value       = var.karpenter.use_subnet_discovery ? "Using subnet discovery with karpenter.sh/discovery tag" : "Using explicit subnet IDs"
 }
 
 output "public_subnet_ids" {
@@ -71,7 +71,7 @@ output "configure_kubectl" {
 
 output "karpenter_version" {
   description = "Installed Karpenter version"
-  value       = var.karpenter_version
+  value       = var.karpenter.version
 }
 
 output "karpenter_commands" {
