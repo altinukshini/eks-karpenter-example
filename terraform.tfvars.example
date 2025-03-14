@@ -1,0 +1,104 @@
+# AWS Region to deploy resources
+region = "us-west-2"
+
+# EKS Cluster Name
+cluster_name = "eks-karpenter-demo"
+
+# Kubernetes version
+cluster_version = "1.29"
+
+# VPC and Subnet IDs (replace with your actual VPC and subnet IDs)
+vpc_id = "vpc-0123456789abcdef0"
+
+# Private subnet IDs are required for the EKS managed node group
+# Even when using subnet discovery for Karpenter, these are needed for the EKS cluster
+private_subnet_ids = ["subnet-0123456789abcdef1", "subnet-0123456789abcdef2", "subnet-0123456789abcdef3"]
+
+# Public subnets are required for load balancers and control plane access
+public_subnet_ids = ["subnet-0123456789abcdef3", "subnet-0123456789abcdef4", "subnet-0123456789abcdef5"]
+
+# Enable public access to the EKS cluster 
+cluster_endpoint_public_access = true
+
+# Allow access from specific IP addresses
+cluster_endpoint_public_access_cidrs = ["0.0.0.0/0"]
+
+
+# Default tags for all resources
+default_tags = {
+  Environment = "dev"
+  Project     = "eks-karpenter"
+  Terraform   = "true"
+  Owner       = "platform-team"
+}
+
+# EKS Managed Node Group configuration
+eks_managed_node_groups = {
+  system = {
+    name           = "eks-system"
+    instance_types = ["t4g.small"]
+    ami_type       = "AL2_ARM_64" # ARM AMI type for Graviton instances
+    min_size       = 1
+    max_size       = 3
+    desired_size   = 2
+    capacity_type  = "ON_DEMAND"
+
+    lifecycle = {
+      create_before_destroy = true
+    }
+  }
+}
+
+# EKS Managed Node Group Defaults
+eks_managed_node_group_defaults = {
+  ami_type       = "AL2_ARM_64" # ARM AMI type for Graviton instances
+  instance_types = ["t4g.small"]
+  disk_size      = 20
+}
+
+# Karpenter node instance types
+karpenter_node_instance_types = [
+  # x86 instances
+  "m5.medium", "m5.large", "m5.xlarge",
+  "c5.medium", "c5.large", "c5.xlarge",
+  "r5.medium", "r5.large", "r5.xlarge",
+  # Latest x86 instances
+  "m6i.medium", "m6i.large", "m6i.xlarge",
+  "c6i.medium", "c6i.large", "c6i.xlarge",
+  "r6i.medium", "r6i.large", "r6i.xlarge",
+  # Graviton2 instances
+  "m6g.medium", "m6g.large", "m6g.xlarge",
+  "c6g.medium", "c6g.large", "c6g.xlarge",
+  "r6g.medium", "r6g.large", "r6g.xlarge",
+  # Graviton3 instances
+  "m7g.medium", "m7g.large", "m7g.xlarge",
+  "c7g.medium", "c7g.large", "c7g.xlarge",
+  "r7g.medium", "r7g.large", "r7g.xlarge",
+  # Graviton4 instances
+  "m8g.medium", "m8g.large", "m8g.xlarge",
+  "c8g.medium", "c8g.large", "c8g.xlarge",
+  "r8g.medium", "r8g.large", "r8g.xlarge",
+  "x8g.medium", "x8g.large", "x8g.xlarge"
+]
+
+# Karpenter node capacity types (SPOT, ON_DEMAND)
+karpenter_node_capacity_types = ["SPOT", "ON_DEMAND"]
+
+# Karpenter TTL settings
+karpenter_ttl_seconds_after_empty   = 30      # 30 seconds
+karpenter_ttl_seconds_until_expired = 2592000 # 30 days
+
+# Remote State Configuration - uncomment and configure to use remote state
+# terraform_state_bucket         = "terraform-state-123456789012-us-west-2"
+# terraform_state_key            = "eks-karpenter/terraform.tfstate"
+# terraform_state_region         = "us-west-2"
+# terraform_state_dynamodb_table = "terraform-state-lock"
+
+# Karpenter version
+karpenter_version = "v1.3.1"
+
+# Subnet and Security Group Selection Method
+# Option 1: Use discovery based on karpenter.sh/discovery tag (default)
+# Option 2: Set to false to use explicit subnet IDs instead of discovery
+use_subnet_discovery         = true
+use_security_group_discovery = true
