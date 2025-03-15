@@ -73,9 +73,9 @@ use_subnet_discovery         = false
 use_security_group_discovery = false
 ```
 
-## Remote State Management
+## Terraform Remote State Management
 
-To set up remote state:
+By default, the project uses local terraform state. If you wish to set up remote state, follow the instructions below.
 
 ### Use the Setup Script
 
