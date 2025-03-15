@@ -1,0 +1,10 @@
+# This ensures high availability during voluntary disruptions like node draining
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: memory-intensive-app-pdb
+spec:
+  minAvailable: 1  # At least 1 pod must remain available during disruptions
+  selector:
+    matchLabels:
+      app: memory-intensive-app 

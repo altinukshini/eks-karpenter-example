@@ -73,9 +73,13 @@ variable "karpenter" {
     use_subnet_discovery         = bool
     use_security_group_discovery = bool
     node_pools                   = map(any)
+    ami_family                   = string
+    ami_selector_terms_alias     = string
   })
   default = {
     version                      = "v1.3.1"
+    ami_family                   = "AL2023"
+    ami_selector_terms_alias     = "al2023@latest"
     use_subnet_discovery         = true
     use_security_group_discovery = true
     node_pools = {
@@ -129,10 +133,10 @@ variable "karpenter" {
         ttl_seconds_after_empty   = 30
         ttl_seconds_until_expired = 2592000
         labels = {
-          "kubernetes.io/arch"         = "arm64"     # Architecture label
-          "node-type"                  = "arm"       # Custom node type label
-          "karpenter.sh/capacity-type" = "spot"      # Capacity type label
-          "nodeManager"                = "karpenter" # Node manager label
+          "kubernetes.io/arch"         = "arm64"
+          "node-type"                  = "arm"
+          "karpenter.sh/capacity-type" = "spot"
+          "nodeManager"                = "karpenter"
         }
       }
     }

@@ -1,0 +1,10 @@
+# Critical for workloads on spot instances to handle interruptions gracefully
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: nginx-spot-arm64-pdb
+spec:
+  maxUnavailable: 1  # At most 1 pod can be unavailable during disruptions
+  selector:
+    matchLabels:
+      app: nginx-spot-arm64 

@@ -19,7 +19,7 @@ while [[ $# -gt 0 ]]; do
       echo "Usage: $0 [--region REGION] [--cluster-name CLUSTER_NAME]"
       echo ""
       echo "Options:"
-      echo "  --region REGION           AWS region where the cluster is deployed (default: from AWS CLI config)"
+      echo "  --region REGION              AWS region where the cluster is deployed (default: from AWS CLI config)"
       echo "  --cluster-name CLUSTER_NAME  Name of the EKS cluster to test"
       exit 0
       ;;
@@ -121,3 +121,4 @@ echo "kubectl logs -f -n karpenter -l app.kubernetes.io/name=karpenter -c contro
 echo ""
 echo "To monitor Karpenter node provisioning:"
 echo "kubectl get nodes -L kubernetes.io/arch,karpenter.sh/capacity-type"
+

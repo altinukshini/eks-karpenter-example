@@ -95,6 +95,9 @@ resource "kubectl_manifest" "karpenter_ec2nodeclass" {
     cluster_name = module.eks.cluster_name
     node_role    = module.karpenter.node_iam_role_arn
 
+    ami_family               = var.karpenter.ami_family
+    ami_selector_terms_alias = var.karpenter.ami_selector_terms_alias
+
     # Determine whether to use subnet IDs or subnet discovery
     use_subnet_ids = length(var.private_subnet_ids) > 0 && !var.karpenter.use_subnet_discovery
     subnet_ids     = jsonencode(var.private_subnet_ids)
@@ -126,7 +129,6 @@ spec:
       labels: ${jsonencode(lookup(each.value, "labels", {}))}
     spec:
       nodeClassRef:
-        apiVersion: karpenter.k8s.aws/v1
         kind: EC2NodeClass
         name: default
         group: karpenter.k8s.aws

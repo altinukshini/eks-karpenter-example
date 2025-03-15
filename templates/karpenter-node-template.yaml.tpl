@@ -3,9 +3,9 @@ kind: EC2NodeClass
 metadata:
   name: default
 spec:
-  amiFamily: AL2023
+  amiFamily: ${ami_family}
   amiSelectorTerms:
-    - alias: al2023@latest
+    - alias: ${ami_selector_terms_alias}
 %{ if use_subnet_ids }
   subnetIDs: ${subnet_ids}
 %{ else }

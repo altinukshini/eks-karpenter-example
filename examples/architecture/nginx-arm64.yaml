@@ -1,0 +1,31 @@
+# Sample deployment for ARM64/Graviton instances
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-arm64
+  labels:
+    app: nginx-arm64
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx-arm64
+  template:
+    metadata:
+      labels:
+        app: nginx-arm64
+    spec:
+      nodeSelector:
+        kubernetes.io/arch: arm64
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi 

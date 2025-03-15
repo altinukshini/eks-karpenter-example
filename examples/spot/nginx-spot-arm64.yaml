@@ -1,0 +1,32 @@
+# Sample deployment for Spot instances (ARM64)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-spot-arm64
+  labels:
+    app: nginx-spot-arm64
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx-spot-arm64
+  template:
+    metadata:
+      labels:
+        app: nginx-spot-arm64
+    spec:
+      nodeSelector:
+        kubernetes.io/arch: arm64
+        karpenter.sh/capacity-type: spot
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi 

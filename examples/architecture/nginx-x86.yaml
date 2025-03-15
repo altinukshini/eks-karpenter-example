@@ -1,0 +1,31 @@
+# Sample deployment for x86/AMD64 instances
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-x86
+  labels:
+    app: nginx-x86
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx-x86
+  template:
+    metadata:
+      labels:
+        app: nginx-x86
+    spec:
+      nodeSelector:
+        kubernetes.io/arch: amd64
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi 

@@ -1,0 +1,34 @@
+# Sample deployment with tolerations for tainted nodes
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-with-tolerations
+  labels:
+    app: nginx-with-tolerations
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx-with-tolerations
+  template:
+    metadata:
+      labels:
+        app: nginx-with-tolerations
+    spec:
+      tolerations:
+      - key: "workload-type"
+        operator: "Equal"
+        value: "specialized"
+        effect: "NoSchedule"
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi 
