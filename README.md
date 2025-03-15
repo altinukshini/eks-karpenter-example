@@ -1,5 +1,7 @@
 # EKS with Karpenter - Terraform
 
+⚠️ **This is an example project intended for educational and learning purposes. It should not be used directly in production without proper review and customization for your specific needs.**
+
 This Terraform project deploys an Amazon EKS cluster with Karpenter for node autoscaling, supporting both x86 and ARM/Graviton instances with Spot instance capability
 
 ## Quick Start
