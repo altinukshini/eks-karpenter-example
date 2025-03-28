@@ -154,7 +154,7 @@ spec:
     cpu: "1000"
     memory: "1000Gi"
   disruption:
-    consolidationPolicy: WhenEmpty
+    consolidationPolicy: WhenEmptyOrUnderutilized
     consolidateAfter: ${each.value.ttl_seconds_after_empty}s
 YAML
 
