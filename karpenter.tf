@@ -100,11 +100,11 @@ resource "kubectl_manifest" "karpenter_ec2nodeclass" {
 
     # Determine whether to use subnet IDs or subnet discovery
     use_subnet_ids = length(var.private_subnet_ids) > 0 && !var.karpenter.use_subnet_discovery
-    subnet_ids     = jsonencode(var.private_subnet_ids)
+    subnet_ids     = var.private_subnet_ids
 
     # Determine whether to use security group IDs or security group discovery
     use_security_group_ids = !var.karpenter.use_security_group_discovery
-    security_group_ids     = jsonencode([module.eks.node_security_group_id])
+    security_group_ids     = [module.eks.node_security_group_id]
   })
 
   depends_on = [
