@@ -1,10 +1,5 @@
 # AWS Region to deploy resources
-region = "us-west-2"
-
-# VPC and Subnet IDs (replace with your actual VPC and subnet IDs)
-vpc_id             = "vpc-0123456789abcdef0"
-private_subnet_ids = ["subnet-0123456789abcdef1", "subnet-0123456789abcdef2", "subnet-0123456789abcdef3"]
-public_subnet_ids  = ["subnet-0123456789abcdef3", "subnet-0123456789abcdef4", "subnet-0123456789abcdef5"]
+region = "us-esat-1"
 
 # Default tags for all resources
 default_tags = {
@@ -13,11 +8,24 @@ default_tags = {
   Terraform   = "true"
 }
 
+# VPC Configuration
+vpc = {
+  name                    = "vpc"
+  cidr                    = "10.20.0.0/17"
+  enable_nat_gateway      = false
+  single_nat_gateway      = true
+  one_nat_gateway_per_az  = false
+  public_subnets          = ["10.20.0.0/24", "10.20.1.0/24", "10.20.2.0/24"]
+  private_subnets         = ["10.20.4.0/22", "10.20.8.0/22", "10.20.12.0/22"]
+  enable_dns_hostnames    = true
+  enable_dns_support      = true
+}
+
 # EKS Cluster Configuration
 eks = {
   # Cluster basic settings
   cluster_name    = "eks-karpenter-demo" # Kubernetes cluster name
-  cluster_version = "1.30"               # Kubernetes version
+  cluster_version = "1.32"               # Kubernetes version
 
   # Cluster endpoint access configuration
   cluster_endpoint_public_access       = true          # Whether the cluster API server is accessible from the internet
@@ -26,13 +34,13 @@ eks = {
   # EKS Managed Node Groups configuration
   managed_node_groups = {
     system = {
-      name           = "eks-system"  # Name of the node group
-      instance_types = ["t4g.small"] # List of EC2 instance types to use
-      ami_type       = "AL2_ARM_64"  # AMI type (AL2_x86_64, AL2_ARM_64, etc.)
-      min_size       = 1             # Minimum number of nodes
-      max_size       = 3             # Maximum number of nodes
-      desired_size   = 2             # Desired number of nodes
-      capacity_type  = "ON_DEMAND"   # Capacity type (ON_DEMAND or SPOT)
+      name           = "eks-system"              # Name of the node group
+      instance_types = ["t4g.small"]             # List of EC2 instance types to use
+      ami_type       = "AL2023_ARM_64_STANDARD"  # AMI type (AL2023_x86_64_STANDARD, AL2023_ARM_64_STANDARD, etc.)
+      min_size       = 1                         # Minimum number of nodes
+      max_size       = 3                         # Maximum number of nodes
+      desired_size   = 2                         # Desired number of nodes
+      capacity_type  = "ON_DEMAND"               # Capacity type (ON_DEMAND or SPOT)
 
       lifecycle = {
         create_before_destroy = true # Create new resources before destroying old ones
@@ -42,9 +50,9 @@ eks = {
 
   # Default settings for all managed node groups
   managed_node_group_defaults = {
-    ami_type       = "AL2_ARM_64"  # Default AMI type
-    instance_types = ["t4g.small"] # Default instance types
-    disk_size      = 20            # Root volume size in GB
+    ami_type       = "AL20232023_ARM_64"  # Default AMI type
+    instance_types = ["t4g.small"]        # Default instance types
+    disk_size      = 20                   # Root volume size in GB
   }
 }
 
@@ -52,19 +60,29 @@ eks = {
 karpenter = {
   version = "v1.3.1" # Karpenter version to deploy
 
-  # Karpenter AMI configuration
-  ami_family               = "AL2023"
-  ami_selector_terms_alias = "al2023@latest"
+  ec2_node_classes = {
+    default = {
+      name = "default"
 
-  # Discovery settings
-  use_subnet_discovery         = true # Use subnet discovery based on tags
-  use_security_group_discovery = true # Use security group discovery based on tags
+      # Karpenter AMI configuration  
+      ami_family               = "AL2023"
+      ami_selector_terms_alias = "al2023@latest"
+
+      disk_size = "20Gi"
+      
+      # Discovery settings
+      use_subnet_discovery         = true
+      use_security_group_discovery = true
+    }
+  }
+
 
   # Node pool configurations
   node_pools = {
     # x86 node pool
     x86 = {
       name = "default-x86" # Name of the node pool
+      ec2_node_class_ref = "default" # Reference to EC2NodeClass name
       instance_types = [   # List of instance types to use
         "t3.small", "t3a.small",
         "t3.medium", "t3a.medium",
@@ -92,7 +110,8 @@ karpenter = {
 
     # ARM node pool
     arm = {
-      name = "default-arm" # Name of the node pool
+      name               = "default-arm" # Name of the node pool
+      ec2_node_class_ref = "default" # Reference to EC2NodeClass name
       instance_types = [   # List of instance types to use
         "t4g.small", "t4g.medium",
         # Graviton2 instances

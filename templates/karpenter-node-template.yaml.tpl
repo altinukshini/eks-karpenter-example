@@ -1,7 +1,7 @@
 apiVersion: karpenter.k8s.aws/v1
 kind: EC2NodeClass
 metadata:
-  name: default
+  name: ${node_class_name}
 spec:
   amiFamily: ${ami_family}
   amiSelectorTerms:
@@ -26,7 +26,7 @@ spec:
   blockDeviceMappings:
     - deviceName: /dev/xvda
       ebs:
-        volumeSize: 20Gi
+        volumeSize: ${disk_size}
         volumeType: gp3
         deleteOnTermination: true
         encrypted: true

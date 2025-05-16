@@ -8,7 +8,6 @@ output "cluster_endpoint" {
   value       = module.eks.cluster_endpoint
 }
 
-
 output "cluster_version" {
   description = "The Kubernetes version for the EKS cluster"
   value       = module.eks.cluster_version
@@ -46,22 +45,17 @@ output "region" {
 
 output "vpc_id" {
   description = "VPC ID used for the EKS cluster"
-  value       = var.vpc_id
+  value       = module.vpc.vpc_id
 }
 
 output "private_subnet_ids" {
   description = "Private subnet IDs used for the EKS cluster"
-  value       = var.private_subnet_ids
-}
-
-output "subnet_discovery_enabled" {
-  description = "Whether subnet discovery is enabled"
-  value       = var.karpenter.use_subnet_discovery ? "Using subnet discovery with karpenter.sh/discovery tag" : "Using explicit subnet IDs"
+  value       = module.vpc.private_subnets
 }
 
 output "public_subnet_ids" {
   description = "Public subnet IDs used for the EKS cluster"
-  value       = var.public_subnet_ids
+  value       = module.vpc.public_subnets
 }
 
 output "configure_kubectl" {
