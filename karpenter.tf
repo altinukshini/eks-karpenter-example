@@ -88,23 +88,29 @@ resource "helm_release" "karpenter" {
 }
 
 resource "kubectl_manifest" "karpenter_ec2nodeclass" {
+  for_each = var.karpenter.ec2_node_classes
+
   server_side_apply = true
   force_conflicts   = true
 
   yaml_body = templatefile("${path.module}/templates/karpenter-node-template.yaml.tpl", {
+    node_class_name = each.value.name
+
     cluster_name = module.eks.cluster_name
     node_role    = module.karpenter.node_iam_role_arn
 
-    ami_family               = var.karpenter.ami_family
-    ami_selector_terms_alias = var.karpenter.ami_selector_terms_alias
+    ami_family               = each.value.ami_family
+    ami_selector_terms_alias = each.value.ami_selector_terms_alias
+
+    disk_size = try(each.value.disk_size, "20Gi")
 
     # Determine whether to use subnet IDs or subnet discovery
-    use_subnet_ids = length(var.private_subnet_ids) > 0 && !var.karpenter.use_subnet_discovery
-    subnet_ids     = jsonencode(var.private_subnet_ids)
+    use_subnet_ids = length(module.vpc.private_subnets) > 0 && try(each.value.use_subnet_discovery, true) == false
+    subnet_ids     = module.vpc.private_subnets
 
     # Determine whether to use security group IDs or security group discovery
-    use_security_group_ids = !var.karpenter.use_security_group_discovery
-    security_group_ids     = jsonencode([module.eks.node_security_group_id])
+    use_security_group_ids = try(each.value.use_security_group_discovery, true) == false
+    security_group_ids     = [module.eks.node_security_group_id]
   })
 
   depends_on = [
@@ -130,7 +136,7 @@ spec:
     spec:
       nodeClassRef:
         kind: EC2NodeClass
-        name: default
+        name: ${each.value.ec2_node_class_ref}
         group: karpenter.k8s.aws
       requirements:
         - key: kubernetes.io/arch

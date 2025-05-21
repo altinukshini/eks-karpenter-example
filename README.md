@@ -108,18 +108,21 @@ The script will:
 3. Show Karpenter events and deployment status
 4. Provide cleanup commands
 
-### Applying Example Deployments
+### Applying OTHER Example Deployments
 
 ```bash
-# Apply a specific example
 kubectl apply -f examples/architecture/nginx-x86.yaml
 kubectl apply -f examples/architecture/nginx-arm64.yaml
 
-# Apply all examples in a directory
-kubectl apply -f examples/architecture/
+kubectl apply -f examples/high-availability/memory-intensive-app-pdb.yaml
+kubectl apply -f examples/high-availability/nginx-spot-arm64-pdb.yaml
 
-# Apply all examples
-kubectl apply -f examples/
+kubectl apply -f examples/specialized/memory-intensive-app.yaml
+kubectl apply -f examples/specialized/nginx-compute-optimized.yaml
+kubectl apply -f examples/specialized/nginx-with-tolerations.yaml
+
+kubectl apply -f examples/spot/nginx-spot-arm64.yaml
+kubectl apply -f examples/spot/nginx-spot-x86.yaml
 ```
 
 ### Running on x86/AMD64, ARM64/Graviton, Spot Instances

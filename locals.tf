@@ -10,6 +10,8 @@ locals {
     }
   )
 
+  vpc_name = "${local.cluster_name}-${var.vpc.name}"
+
   karpenter_namespace = "karpenter"
   karpenter_sa_name   = "karpenter"
 
@@ -21,7 +23,6 @@ locals {
   )
 
   available_azs   = data.aws_availability_zones.available.names
-  subnet_zones    = try(data.aws_subnet.private_subnets[*].availability_zone, [])
+  subnet_zones    = try(module.vpc.azs, [])
   karpenter_zones = length(local.subnet_zones) > 0 ? local.subnet_zones : local.available_azs
 }
-

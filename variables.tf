@@ -1,22 +1,7 @@
 variable "region" {
   description = "AWS region to deploy resources"
   type        = string
-  default     = "us-west-2"
-}
-
-variable "vpc_id" {
-  description = "ID of the VPC where the cluster will be deployed"
-  type        = string
-}
-
-variable "private_subnet_ids" {
-  description = "List of private subnet IDs for the EKS cluster nodes"
-  type        = list(string)
-}
-
-variable "public_subnet_ids" {
-  description = "List of public subnet IDs for the EKS cluster"
-  type        = list(string)
+  default     = "us-east-1"
 }
 
 variable "default_tags" {
@@ -27,6 +12,21 @@ variable "default_tags" {
     Project     = "eks-karpenter-example"
     Terraform   = "true"
   }
+}
+
+variable "vpc" {
+  description = "VPC configuration"
+  type = object({
+    name                   = string
+    cidr                   = string
+    enable_nat_gateway     = bool
+    public_subnets         = list(string)
+    private_subnets        = list(string)
+    enable_dns_hostnames   = bool
+    enable_dns_support     = bool
+    single_nat_gateway     = bool
+    one_nat_gateway_per_az = bool
+  })
 }
 
 variable "eks" {
@@ -41,7 +41,7 @@ variable "eks" {
   })
   default = {
     cluster_name                         = "eks-karpenter-demo"
-    cluster_version                      = "1.30"
+    cluster_version                      = "1.32"
     cluster_endpoint_public_access       = true
     cluster_endpoint_public_access_cidrs = ["0.0.0.0/0"]
     managed_node_groups = {
@@ -69,22 +69,32 @@ variable "eks" {
 variable "karpenter" {
   description = "Karpenter configuration"
   type = object({
-    version                      = string
-    use_subnet_discovery         = bool
-    use_security_group_discovery = bool
-    node_pools                   = map(any)
-    ami_family                   = string
-    ami_selector_terms_alias     = string
+    version          = string
+    ec2_node_classes = map(any)
+    node_pools       = map(any)
   })
   default = {
-    version                      = "v1.3.1"
-    ami_family                   = "AL2023"
-    ami_selector_terms_alias     = "al2023@latest"
-    use_subnet_discovery         = true
-    use_security_group_discovery = true
+    version = "v1.3.1"
+
+    ec2_node_classes = {
+      default = {
+        name = "default"
+
+        # Karpenter AMI configuration  
+        ami_family               = "AL2023"
+        ami_selector_terms_alias = "al2023@latest"
+
+        disk_size = "20Gi"
+
+        # Discovery settings
+        use_subnet_discovery         = true
+        use_security_group_discovery = true
+      }
+    }
     node_pools = {
       x86 = {
-        name = "default-x86"
+        name               = "default-x86"
+        ec2_node_class_ref = "default"
         instance_types = [
           "t3.small", "t3a.small",
           "t3.medium", "t3a.medium",
@@ -110,7 +120,8 @@ variable "karpenter" {
         }
       },
       arm = {
-        name = "default-arm"
+        name               = "default-arm"
+        ec2_node_class_ref = "default"
         instance_types = [
           "t4g.small", "t4g.medium",
           # Graviton2 instances

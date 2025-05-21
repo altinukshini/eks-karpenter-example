@@ -5,9 +5,9 @@ module "eks" {
   cluster_name    = local.cluster_name
   cluster_version = var.eks.cluster_version
 
-  vpc_id                   = var.vpc_id
-  subnet_ids               = var.private_subnet_ids
-  control_plane_subnet_ids = var.public_subnet_ids
+  vpc_id                   = module.vpc.vpc_id
+  subnet_ids               = module.vpc.private_subnets
+  control_plane_subnet_ids = module.vpc.public_subnets
 
   enable_irsa = true
 
@@ -20,8 +20,8 @@ module "eks" {
 
   enable_cluster_creator_admin_permissions = true
 
-  node_security_group_tags = {
-    "karpenter.sh/discovery" = local.cluster_name
+  cluster_security_group_tags = {
+    "karpenter.sh/discovery" = local.cluster_name # Needed for Karpenter to discover the security group
   }
 
   cluster_security_group_additional_rules = {
@@ -33,6 +33,10 @@ module "eks" {
       type                       = "ingress"
       source_node_security_group = true
     }
+  }
+
+  node_security_group_tags = {
+    "karpenter.sh/discovery" = local.cluster_name # Needed for Karpenter to discover the security group
   }
 
   node_security_group_additional_rules = {
