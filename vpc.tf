@@ -19,9 +19,14 @@ module "vpc" {
   private_subnet_names = ["${local.vpc_name}-priv-1", "${local.vpc_name}-priv-2", "${local.vpc_name}-priv-3"]
   public_subnet_names  = ["${local.vpc_name}-pub-1", "${local.vpc_name}-pub-2", "${local.vpc_name}-pub-3"]
 
-  private_subnet_tags = {
-    Tier = "private"
-  }
+  private_subnet_tags = merge(
+    {
+      Tier = "private"
+    },
+    local.any_node_class_subnet_discovery ? {
+      "karpenter.sh/discovery" = local.cluster_name
+    } : {}
+  )
 
   public_subnet_tags = {
     Tier = "public"

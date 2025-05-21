@@ -20,9 +20,9 @@ module "eks" {
 
   enable_cluster_creator_admin_permissions = true
 
-  node_security_group_tags = {
+  cluster_security_group_tags = local.any_node_class_sg_discovery ? {
     "karpenter.sh/discovery" = local.cluster_name
-  }
+  } : {}
 
   cluster_security_group_additional_rules = {
     ingress_nodes_ephemeral_ports_tcp = {
@@ -34,6 +34,10 @@ module "eks" {
       source_node_security_group = true
     }
   }
+
+  node_security_group_tags = local.any_node_class_subnet_discovery ? {
+    "karpenter.sh/discovery" = local.cluster_name
+  } : {}
 
   node_security_group_additional_rules = {
     # Allow all traffic between nodes for services like CoreDNS and cross-pod communication

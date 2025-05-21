@@ -25,5 +25,16 @@ locals {
   available_azs   = data.aws_availability_zones.available.names
   subnet_zones    = try(module.vpc.azs, [])
   karpenter_zones = length(local.subnet_zones) > 0 ? local.subnet_zones : local.available_azs
-}
 
+  # Check if any node class has subnet discovery enabled
+  any_node_class_subnet_discovery = length([
+    for node_class in var.karpenter.ec2_node_classes :
+    node_class if try(node_class.use_subnet_discovery, false) == true
+  ]) > 0
+
+  # Check if any node class has security group discovery enabled
+  any_node_class_sg_discovery = length([
+    for node_class in var.karpenter.ec2_node_classes :
+    node_class if try(node_class.use_security_group_discovery, false) == true
+  ]) > 0
+}

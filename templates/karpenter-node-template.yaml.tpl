@@ -6,20 +6,34 @@ spec:
   amiFamily: ${ami_family}
   amiSelectorTerms:
     - alias: ${ami_selector_terms_alias}
+
+
+
 %{ if use_subnet_ids }
-  subnetIDs: ${subnet_ids}
+  subnetSelectorTerms:
+%{ for id in subnet_ids }
+    - id: ${id}
+%{ endfor }
 %{ else }
   subnetSelectorTerms:
     - tags:
         karpenter.sh/discovery: ${cluster_name}
 %{ endif }
+
+
 %{ if use_security_group_ids }
-  securityGroupIDs: ${security_group_ids}
+  securityGroupSelectorTerms:
+%{ for id in security_group_ids }
+    - id: ${id}
+%{ endfor }
 %{ else }
   securityGroupSelectorTerms:
     - tags:
         karpenter.sh/discovery: ${cluster_name}
 %{ endif }
+
+
+
   role: ${node_role}
   tags:
     karpenter.sh/discovery: ${cluster_name}
