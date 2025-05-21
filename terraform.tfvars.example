@@ -1,5 +1,5 @@
 # AWS Region to deploy resources
-region = "us-esat-1"
+region = "us-east-1"
 
 # Default tags for all resources
 default_tags = {
